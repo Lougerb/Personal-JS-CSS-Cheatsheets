@@ -72,8 +72,8 @@ function moveTouch(e) {
    
   e.preventDefault();
 };
-
-
+// Reference:
+//"https://www.kirupa.com/html5/detecting_touch_swipe_gestures.htm"
 //=====================================================================================
 //Title
 //=====================================================================================
