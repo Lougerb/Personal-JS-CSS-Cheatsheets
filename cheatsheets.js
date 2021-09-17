@@ -18,6 +18,27 @@ const toggleClassOnce  =  (
 };
 
 //=====================================================================================
+//Adding Delay for Async
+//=====================================================================================
+const delay = n => new Promise(r => setTimeout(r, n));
+
+//Usage
+const foo = async () =>{
+    try{
+        console.log("bar1");
+        await delay(500);
+        console.log("bar2");
+        await delay(500);
+        console.log("bar3");
+        await delay(500);
+
+    }catch (err){
+        console.log(err);
+    }
+}
+foo();
+
+//=====================================================================================
 //Swipe functions
 //=====================================================================================
 myElement.addEventListener("touchstart", startTouch, false);
