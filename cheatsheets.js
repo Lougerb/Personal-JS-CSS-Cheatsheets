@@ -111,3 +111,13 @@ $(window).on('resize', function(){
                 console.log('This is pc')
             }
         });
+
+//=====================================================================================
+// Responsive Nav on scroll when resizing browser on PC
+//=====================================================================================
+$(window).on("scroll", function (e) {
+    //calculate left position
+    var left = $(this).scrollLeft();
+    //apply to header in negative
+    $(".nav-bar-here").css("left", -left);
+});
