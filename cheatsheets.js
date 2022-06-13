@@ -121,3 +121,28 @@ $(window).on("scroll", function (e) {
     //apply to header in negative
     $(".nav-bar-here").css("left", -left);
 });
+
+//=====================================================================================
+// Real usage for modal plugin
+//=====================================================================================
+
+Modal plugin
+https://www.humaan.com/modaal/
+
+Usage
+HTML:
+<a class='myButton' name='myContent1'>Show Modal</a>
+<div id='myContent1'>This is a content 1</div>
+
+<a class='myButton' name='myContent2'>Show Modal</a>
+<div id='myContent2'>This is a content 2</div>
+
+JS:
+
+$('myButton').each(function(i, e){
+            var el = `#${e.id}`;
+            var eltar = `#${e.name}`;
+            $(el).modaal({
+                content_source: eltar,
+            });
+        });
