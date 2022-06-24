@@ -1,0 +1,218 @@
+==========================================
+Add gallery on cms
+==========================================
+
+1. make new yaml for your cms gallery
+
+Example Content:
+
+# Database Schema
+tables:
+
+  # sample_table:
+  #   columns:
+  #     -
+  #       name: column_name # Column name, required
+  #       type: TEXT/INTEGER/DATETIME/BLOB # Column type, required
+  #       notnull: 0,1 # Not NULL, default 0
+  #       dflt_value: null # default value, default null
+  #       pk: 0,1 # Primary Key, default 0
+  #       ai: 0,1 # Autoincrement, default 0
+  #   indexes:
+  #     -
+  #       name: index_name # Index name, required
+  #       unique: 0,1 # Unique Index, default 0
+  #       infos: # target column name array, required
+  #         -
+  #           name: column_name # column_name, required
+
+  # cms_usedgolfcar_image
+  cms_blog_image:
+    columns:
+      -
+        name: blog_id
+        type: INTEGER
+      -
+        name: image_id
+        type: INTEGER
+      -
+        name: ordered
+        type: INTEGER
+      -
+        name: valid
+        type: BOOLEAN
+      -
+        name: created
+        type: DATETIME
+      -
+        name: modified
+        type: DATETIME
+    indexes:
+      -
+        name: BLOG_IMAGE_ID
+        infos:
+          -
+            name: blog_id
+            
+            
+            
+2. Add new model to your cms controller
+
+$this->_model_gallery = new Model(true, array(
+            'table'   => 'cms_blog_image',
+            'bind'    => array(
+                'blog_id'   => 'INTEGER',
+                'image_id' => 'INTEGER',
+                'ordered'  => 'INTEGER',
+            )
+            
+3. Go to _setData(), and inside if( $internalId ) {, insert the following
+
+$this->page['data']['galleries'] =
+                $this->_model_gallery
+                    ->listMax(8)
+                    ->current(1)
+                    ->where(
+                        sprintf('%s = ?', $this->page['this_id']),
+                        $this->page['data'][$this->page['this_id']]
+                    )
+                    ->order('ordered', 'asc')
+                    ->find();
+                    
+4. and in else, find this:
+
+$this->page['data'] =
+             $this->_model
+                ->find();
+                
+            And replace with this
+            
+$this->page['data'] =
+    $this->_model
+    ->select('cms_blog.*, cms_blog_image.image_id')
+    ->listMax($listMax)
+    ->current($this->in('p'))
+    ->order('cms_blog.post_date', 'desc')
+    ->order('cms_blog.blog_id', 'desc')
+    ->join(
+        'cms_blog_image',
+        'left',
+        sprintf('cms_blog.%s = cms_blog_image.%s AND cms_blog_image.ordered = ?', $this->page['this_id'], $this->page['this_id']),
+        1
+    )
+    ->group('cms_blog.blog_id')
+    ->find();
+    
+    
+    
+    
+5. Go to update(), inside if (!$errorMessage), add  the following after the first if/else:
+
+if(isset($data['galleries']) && is_array($data['galleries'])) {
+                $galleryItem = $this->page['this_id'].', image_id, ordered';
+                $ordered = 1;
+                foreach($data['galleries'] as $key => $gallery) {
+                    if(! empty($gallery)) {
+                        $gallery = array(
+                            $this->page['this_id']  => $internalId,
+                            'image_id' => $gallery,
+                            'ordered'  => $ordered,
+                        );
+                        $galleryId = $this->_model_gallery->insert( $galleryItem, $gallery );
+                        $ordered ++;
+                    }
+                }
+            }
+            
+6. go to your cms folder with form.tpl, for example: template/cms/blog. And select the html_head.tpl
+    Add the following:
+        <!--add after ckeditor.js-->
+         <link rel="stylesheet" type="text/css" href="{{ $site.cms_dir }}/js/jquery-ui/smoothness/jquery-ui.custom.css" />
+        <script type="text/javascript" src="{{ $site.cms_dir }}/js/jquery-ui.js"></script>
+         <script type="text/javascript" src="{{ $site.cms_dir }}/js/modal/image_multi.js"></script> 
+         
+          <script type="text/javascript">
+            $( function() {
+                $( ".modal_image_multi_cont" ).sortable();
+
+                $(document).on('click', '#gallery-wrap .list-remove', function() {
+                    $(this).closest('.c-uploader-list__item').remove();
+                });
+            } );
+        </script>
+        
+        
+7. And finally, add the this inside the form of your cms
+
+<fieldset class="c-fieldset">
+        <legend class="c-fieldset__legend">ギャラリー画像<small>（最大8枚まで）</small> <a href="{{ $site.cms_dir }}/multi/add" class="c-button is-success is-small modal_multi_image" data-target="#gallery-wrap" data-template="#gallery-template" data-count=".photo_thumb" data-maxsize="50">画像追加</a></legend>
+
+        <div class="c-alert is-default">
+            ドラッグ＆ドロップで並び順を変更することが可能です。
+        </div>
+
+        {{ assign $gid = "galleries" }}
+        <div id="gallery-wrap" class="modal_image_multi_cont c-uploader-list">
+
+            {{ if $page.data.galleries }}
+            {{ foreach $page.data.galleries as $key => $gallery }}
+            <div class="c-uploader-list__item">
+                {{ assign $id = "image_id" }}
+                {{ assign $image_id = is_array($gallery) ? $gallery[$id] : $gallery }}
+                <div class="c-uploader-image">
+                    <input class="img_val" type="hidden" name="{{ $gid }}[]" value="{{ $image_id }}" />
+                    <div class="c-uploader-image__content">
+                        <div class="c-uploader-image__selected u-align-center">
+                            <p class="c-uploader-image__photo u-mh-auto">
+                                <figure class="c-uploader-image__photo__figure">
+                                    <img src="{{ $image_id|getImageUrl:220:150 }}" alt="" class="c-uploader-image__photo__image">
+                                </figure>
+                            </p>
+                            <a href="#" class="delete_image c-button is-small is-danger">選択解除</a>
+                            <a href="{{ $site.cms_dir }}/image/add" class="change_image c-button is-small is-success modal_image">別の画像を選択</a>
+                        </div>
+                        <div class="c-uploader-image__empty">
+                            <p class="c-uploader-image__photo u-mh-auto"></p>
+                            <a href="{{ $site.cms_dir }}/image/add" class="c-button is-primary is-small modal_image">新規投稿</a>
+                            <a href="{{ $site.cms_dir }}/image" class="bc-buttontn is-success is-small modal_image">既存画像から選択</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="u-mt-1">
+                    <button class="c-button is-danger is-small is-block list-remove">削除</button>
+                </div>
+            </div>
+            {{ end foreach }}
+            {{ end }}
+
+        </div>
+
+        <p class="u-align-center"><a href="{{ $site.cms_dir }}/multi/add" type="button" class="c-button is-block is-success modal_multi_image" data-target="#gallery-wrap" data-template="#gallery-template" data-count=".photo_thumb" data-maxsize="50">画像追加</a></p>
+
+        <script type="text/template" id="gallery-template">
+            <div class="c-uploader-list__item">
+                <div class="c-uploader-image">
+                    <input class="img_val" type="hidden" name="{{ $gid }}[]" value="" />
+                    <div class="c-uploader-image__content">
+                        <div class="c-uploader-image__selected u-align-center">
+                            <div class="c-uploader-image__photo u-mh-auto">
+                                <figure class="c-uploader-image__photo__figure"></figure>
+                            </div>
+                            <a href="#" class="delete_image c-button is-small is-danger">選択解除</a>
+                            <a href="{{ $site.cms_dir }}/image/add" class="change_image c-button is-small is-success modal_image">別の画像を選択</a>
+                        </div>
+                        <div class="c-uploader-image__empty">
+                            <div class="c-uploader-image__photo u-mh-auto">
+                                <figure class="c-uploader-image__photo__figure"></figure>
+                            </div>
+                            <a href="{{ $site.cms_dir }}/image/add" class="c-button is-primary is-small modal_image">新規投稿</a>
+                            <a href="{{ $site.cms_dir }}/image" class="c-button is-success is-small modal_image">既存画像から選択</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="u-mt-1">
+                    <button class="c-button is-danger is-small is-block list-remove">削除</button>
+                </div>
+            </div>
+        </script>
+    </fieldset>
