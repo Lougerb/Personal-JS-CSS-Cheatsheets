@@ -146,3 +146,6 @@ $('myButton').each(function(i, e){
                 content_source: eltar,
             });
         });
+
+//prevent pressing enter
+<input type="text" onkeydown="return event.key != 'Enter';">
