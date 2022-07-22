@@ -149,3 +149,10 @@ $('myButton').each(function(i, e){
 
 //prevent pressing enter
 <input type="text" onkeydown="return event.key != 'Enter';">
+  
+  
+//Number only on input
+  $('#number').keypress(function(e){
+            const pattern = /^[0-9]$/;
+            return pattern.test(e.key )
+        });
