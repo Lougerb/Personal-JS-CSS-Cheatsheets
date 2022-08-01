@@ -156,3 +156,31 @@ $('myButton').each(function(i, e){
             const pattern = /^[0-9]$/;
             return pattern.test(e.key )
         });
+
+// add class when fixed class touches an element
+$(document).scroll(function(){
+        var targetEl = $(".targetEl"); //Target Element
+        var targetBG = $('.targetBG'); // Target Touch element
+        var toggleClassEl = false;
+
+        var toggleIntersect = function(targetBG, fixedEl, toggleClass, newClass){
+            var fixed_position = fixedEl.offset().top;
+            var fixed_height = fixedEl.height();
+            targetBG.each(function(){
+                var toCross_position = $(this).offset().top;
+                var toCross_height = $(this).height();
+
+                if(!(fixed_position + fixed_height  < toCross_position) && !(fixed_position > toCross_position + toCross_height)){
+                    toggleClass = true;
+                }
+
+            });
+            if(toggleClass == true){
+                fixedEl.addClass(`${newClass}`);
+            }else{
+                fixedEl.removeClass(`${newClass}`);
+            }
+        }
+
+         toggleIntersect(targetBG, targetEl, toggleClassEl, 'changeColorClass');
+      });
