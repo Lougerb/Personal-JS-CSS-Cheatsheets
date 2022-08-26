@@ -157,30 +157,28 @@ $('myButton').each(function(i, e){
             return pattern.test(e.key )
         });
 
-// add class when fixed class touches an element
-$(document).scroll(function(){
-        var targetEl = $(".targetEl"); //Target Element
-        var targetBG = $('.targetBG'); // Target Touch element
-        var toggleClassEl = false;
+// intersecting element
+function observeElement(el){
+  var options = {
+    root: null, //default is whole screen = null | change this if you want an element to be an observer, for example: $('.fixedNav')
+    threshold: 0.25, // default 0, | 0.00 - 1.00 percent of the element
+    rootMargin: "-30% 0% -30% 0%" // default 0 , margin of the observer, only units are % and px, always put units to 0
+  }
 
-        var toggleIntersect = function(targetBG, fixedEl, toggleClass, newClass){
-            var fixed_position = fixedEl.offset().top;
-            var fixed_height = fixedEl.height();
-            targetBG.each(function(){
-                var toCross_position = $(this).offset().top;
-                var toCross_height = $(this).height();
+  var observer = new IntersectionObserver(function(entries, observer){
+      entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        // do something if entry is intersecting
+      }else {
+        // do something if entry not intersecting
+      }
+    });
+  }, options);
 
-                if(!(fixed_position + fixed_height  < toCross_position) && !(fixed_position > toCross_position + toCross_height)){
-                    toggleClass = true;
-                }
+  el.each(function(i, e){
+    observer.observe(e);
+  });
+}
 
-            });
-            if(toggleClass == true){
-                fixedEl.addClass(`${newClass}`);
-            }else{
-                fixedEl.removeClass(`${newClass}`);
-            }
-        }
-
-         toggleIntersect(targetBG, targetEl, toggleClassEl, 'changeColorClass');
-      });
+var sampleEl = $('.sample-el');
+observeElement(sampleEl);
